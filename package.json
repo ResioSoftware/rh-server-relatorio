@@ -16,11 +16,15 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "dotenv": "^8.1.0",
+    "exceljs": "^2.0.1",
+    "exceljs-node": "^1.6.7",
     "express": "^4.16.4",
     "jsonwebtoken": "^8.5.1",
     "morgan": "^1.9.1",
     "multi": "^0.1.3",
-    "mysql2": "^1.6.5"
+    "mysql2": "^1.7.0",
+    "node-xlsx": "^0.15.0",
+    "xlsx": "^0.15.1"
   },
   "devDependencies": {
     "@types/amqplib": "^0.5.13",
@@ -32,7 +36,7 @@
     "@types/morgan": "^1.7.35",
     "@types/sequelize": "^4.27.48",
     "nodemon": "^1.19.1",
-    "sequelize": "^5.8.7",
+    "sequelize": "^5.19.1",
     "sequelize-cli": "^5.4.0"
   }
 }
