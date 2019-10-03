@@ -25,7 +25,8 @@ async function bankDataRelatory({idEmpresa}) {
 
 async function contactData({idEmpresa}) {
     const colaborador = await db.query(`SELECT matricula, Colaborador.nome as nome, Contato.nome as contato_nome, Contato.email, 
-    Contato.telefone, Contato.telefoneTrabalho, Contato.celular, relacao FROM Colaborador RIGHT JOIN Contato on Colaborador.id = Contato.ContatoId 
+    Contato.telefone, Contato.telefoneTrabalho, Contato.celular, RC.nome as relacao FROM Colaborador RIGHT JOIN Contato on Colaborador.id = Contato.ContatoId
+RIGHT JOIN RelacaoContato RC on Contato.RelacaoContatoId = RC.id
     WHERE Colaborador.idEmpresa = ?`, {...params, replacements: [idEmpresa]});
 
     const empresa = await getNomeEmpresa(idEmpresa);
@@ -36,8 +37,8 @@ async function contactData({idEmpresa}) {
 
 async function dependentData({idEmpresa}) {
     const colaborador = await db.query(`SELECT matricula, C.nome as nome, D.nome as dependente_nome, D.cpf,
-     D.dataNascimento, D.nomeMae, D.relacao, D.incluirParaFinsDeImpostoRenda FROM Colaborador C RIGHT JOIN Dependente D
-      on C.id = D.DependenteId WHERE C.idEmpresa = ?`, {...params, replacements: [idEmpresa]});
+     D.dataNascimento, D.nomeMae, RD.nome as relacao, D.incluirParaFinsDeImpostoRenda FROM Colaborador C RIGHT JOIN Dependente D
+      on C.id = D.DependenteId RIGHT JOIN RelacaoDependente RD on D.RelacaoDependenteId = RD.id WHERE C.idEmpresa = ?`, {...params, replacements: [idEmpresa]});
     const empresa = await getNomeEmpresa(idEmpresa);
 
     return writeFile(['Empresa', 'Matricula', 'Colaborador', 'Dependente', 'CPF', 'Data de Nascimento', 'Nome da mae', 'Relacao', 'Usa para Imposto de Renda?'],
@@ -80,7 +81,8 @@ async function tempoDeCasaColaborador({idEmpresa}) {
 
 
 async function anotacoesColaborador({idEmpresa}) {
-    const colaborador = await db.query(`SELECT matricula, nome, titulo, anotacao, categoria, A.createdAt FROM Colaborador RIGHT JOIN Anotacao A ON Colaborador.id = A.AnotacaoId WHERE idEmpresa = ?`, {...params, replacements: [idEmpresa]});
+    const colaborador = await db.query(`SELECT matricula, nome, titulo, anotacao, CA.nome as categoria, A.createdAt FROM Colaborador
+    RIGHT JOIN Anotacao A ON Colaborador.id = A.AnotacaoId RIGHT JOIN CategoriaAnotacao CA ON A.CategoriaAnotacaoId = CA.id WHERE idEmpresa = ?`, {...params, replacements: [idEmpresa]});
     const empresa = await getNomeEmpresa(idEmpresa);
 
     return writeFile(['Empresa', 'Matricula', 'Nome', 'Titulo', 'Categoria', 'Anotacao', 'Data cadastro'], colaborador.map(v => [empresa, v.matricula, v.nome, v.titulo, v.categoria, v.anotacao, v.createdAt])[0], 'Anotacao colaborador')
@@ -90,8 +92,8 @@ async function anotacoesColaborador({idEmpresa}) {
 
 async function atualizacoesCargoESalario({idEmpresa}) {
     const colaborador = await db.query(`SELECT matricula, Colaborador.nome, salario, C.nome as cargo, cbo, dataAdmissao, 
-                                               D.nome as departamento, V.nome as vinculo FROM Colaborador LEFT JOIN Cargo C on Colaborador.CargoId = C.id LEFT JOIN 
-                                               Departamento D on Colaborador.DepartamentoId = D.id LEFT JOIN Vinculo V on Colaborador.VinculoId = V.id WHERE Colaborador.idEmpresa = ?`, {...params, replacements: [idEmpresa]});
+                                               D.nome as departamento, V.nome as vinculo FROM Colaborador LEFT JOIN Cargo C ON Colaborador.CargoId = C.id LEFT JOIN 
+                                               Departamento D on Colaborador.DepartamentoId = D.id LEFT JOIN Vinculo V ON Colaborador.VinculoId = V.id WHERE Colaborador.idEmpresa = ?`, {...params, replacements: [idEmpresa]});
     const empresa = await getNomeEmpresa(idEmpresa);
 
     return writeFile(['Empresa', 'Matricula', 'Nome', 'Salario', 'Cargo', 'CBO', 'Departamento', 'Motivo', 'Vinculo', 'Descricao', 'Data de', 'Data ate'],
@@ -112,12 +114,13 @@ async function admissoes({idEmpresa}) {
 
 
 async function desligamentos({idEmpresa}) {
-    const colaborador = await db.query(`SELECT matricula, Colaborador.nome, email, rg, cpf, pis, nSerieCtps, sexo, dataNascimento, salario, celular, C.nome AS cargo,
-       cbo, D.nome AS departamento, CDC.nome AS centroCusto, DES.aviso, DES.tipo, DES.dataDesligamento, DES.dataAviso, dataAdmissao,
+    const colaborador = await db.query(`SELECT matricula, Colaborador.nome, email, rg, cpf, pis, nSerieCtps, S.nome as sexo, dataNascimento, salario, celular, C.nome AS cargo,
+       cbo, D.nome AS departamento, CDC.nome AS centroCusto, TAP.nome as tipo, TD.nome as aviso, DES.dataDesligamento, DES.dataAviso, dataAdmissao,
        DES.observacoes, E.cep, E.endereco, E.numero, E.complemento, E.estado, E.cidade
        FROM Colaborador LEFT JOIN Cargo C ON Colaborador.CargoId = C.id LEFT JOIN Departamento D ON Colaborador.DepartamentoId = D.id
        LEFT JOIN CentroDeCusto CDC ON Colaborador.CentroDeCustoId = CDC.id LEFT JOIN Endereco E ON Colaborador.EnderecoId = E.id
-           RIGHT JOIN Desligamento DES ON Colaborador.id = DES.DesligamentoId WHERE Colaborador.idEmpresa = ?`, {...params, replacements: [idEmpresa]});
+           RIGHT JOIN Desligamento DES ON Colaborador.id = DES.DesligamentoId RIGHT JOIN Sexo S ON Colaborador.SexoId = S.id RIGHT JOIN TipoAvisoPrevio TAP on DES.TipoAvisoPrevioId = TAP.id
+           RIGHT JOIN TipoDesligamento TD ON DES.TipoDesligamentoId = TD.id WHERE Colaborador.idEmpresa = ?`, {...params, replacements: [idEmpresa]});
     const empresa = await getNomeEmpresa(idEmpresa);
 
     return writeFile(['Empresa', 'Matricula', 'Nome completo', 'E-mail', 'RG', 'CPF', 'PIS', 'CTPS', 'Sexo', 'Data de nascimento', 'Salario'
@@ -130,7 +133,11 @@ async function desligamentos({idEmpresa}) {
 
 
 async function faltas({idEmpresa}) {
-    const colaborador = await db.query(``, {...params, replacements: [idEmpresa]});
+    const colaborador = await db.query(`SELECT matricula, C.nome, F.dataInicial, F.dataFinal, TFA.nome as tipo, MFA.nome as motivo, CA.nome as cargo, D.nome as departamento,
+       CDC.nome as centroCusto, V.nome as vinculo FROM Colaborador C RIGHT JOIN Falta F on C.id = F.FaltaId
+           LEFT JOIN Cargo CA ON C.CargoId = CA.id LEFT JOIN Departamento D ON C.DepartamentoId = D.id LEFT JOIN
+           CentroDeCusto CDC ON C.CentroDeCustoId = CDC.id LEFT JOIN Vinculo V on C.VinculoId = V.id
+           LEFT JOIN TipoFaltaAfastamento TFA on F.TipoFaltaAfastamentoId = TFA.id LEFT JOIN MotivoFaltaAfastamento MFA on F.MotivoFaltaAfastamentoId = MFA.id WHERE C.idEmpresa = ?;`, {...params, replacements: [idEmpresa]});
     const empresa = await getNomeEmpresa(idEmpresa)
 
    // return writeFile(['Empresa', 'Matricula', 'Nome', 'De', 'Ate', 'Tipo', 'Motivo', 'CID', 'Cargo', 'Departamento', 'Centro de custo', 'Vinculo'],
