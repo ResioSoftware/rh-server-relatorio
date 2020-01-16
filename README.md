@@ -1,8 +1,6 @@
 # rh-server-relatorio
 
-Api da aplicacao de RH, faz parte de outros projetos integrados, entre eles:
-
-api que consome uma fila do rabbitMQ e processa eventos e atende algumas chamadas de RPC:
+Api que consome uma fila do rabbitMQ e processa eventos e atende algumas chamadas de RPC:
 
 api principal, no qual consome mensagens por ela pelo rabitMQ:
 
